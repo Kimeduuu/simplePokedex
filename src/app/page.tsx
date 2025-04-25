@@ -1,406 +1,156 @@
 'use client'
+import { Button, Flex, Img, Input, Text } from "@chakra-ui/react";
+import { useState } from "react";
 
-import { useState, useRef } from 'react'
-import { Button, Flex, Input, Text } from "@chakra-ui/react";
-import {
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalFooter,
-  ModalBody,
-  ModalCloseButton,
-  useDisclosure,
-  FormControl,
-  FormLabel
-} from '@chakra-ui/react'
+import { Tabs, TabList, TabPanels, Tab, TabPanel } from '@chakra-ui/react'
 
-import {
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
-  PopoverHeader,
-  PopoverBody,
-  PopoverCloseButton,
-  Portal
-} from '@chakra-ui/react'
+import Pokedex from '../imgs/pokedex.png'
 
-
-interface Project {
-  name: string,
-  id: number,
-  money: number,
-  createdAt: Date;
-  lastTimeEdited: Date;
+interface Pokemon{
+  name: string;
+  id: number;
+  sprites: {
+    back_shiny: string;
+    front_shiny: string;
+    front_default: string;
+    back_default: string;
+  }
+  weight: number;
+  height: number;
+  abilities: {
+    ability: {
+      name: string
+    }
+  }[]
 }
 
-export default function Home() {
 
-  const [project, setProject] = useState<Project[]>([])
-  const [projectName, setProjectName] = useState<Project['name']>('')
-  const [projectMoney, setProjectMoney] = useState<Project['money']>(0);
+export default function Home(){
 
-  const [creatingMenu, setCreatingMenu] = useState(false)
-  const [editProjectId, setEditProjectId] = useState<number>(0)
-  const [editProjectName, setEditProjectName] = useState<string>('')
-  const [editProjectMoney, setEditProjectMoney] = useState<number>(0)
+  const [name, setName] = useState<string>('')
+  const [pokemon, setPokemon] = useState<Pokemon | null>(null)
 
+  const [pokeImage, setPokeImage] = useState<Pokemon['sprites']>()
+  let [sortedNumber, setSortedNumber] = useState<number>()
+  const [error, setError] = useState('')
+  
+    
 
-  const [firstModalOpen, setFirstModalOpen] = useState(false)
-  const [secondModalOpen, setSecondModalOpen] = useState(false)
+    function search(){
+      if (name.length >= 1 ){
+        // math.random < 0.2 redefine to 1, if not, show 0
+        
 
-  const { isOpen, onOpen, onClose } = useDisclosure()
-
-  const initialRef = useRef(null)
-  const finalRef = useRef(null)
-
-
-  const openCreatingMenu = () => {
-
-    setCreatingMenu(true);
-  }
-
-
-  function handleCreateProject() {
-    if (projectName.length > 2 && projectName.length < 30 && projectMoney >= 5000) {
-      const _project: Project = {
-        name: projectName,
-        money: projectMoney,
-        id: Date.now(),
-        createdAt: new Date(),
-        lastTimeEdited: new Date(),
-      }
-
-      const updatedProjectArray = [...project, _project];
-
-      setCreatingMenu(false)
-      setProjectName('')
-      setProjectMoney(0)
-      setProject(updatedProjectArray)
-    } else
-
-      if (projectName.length <= 2 && projectMoney > 5000) {
-        alert(`you cant create project with ${projectName.length} caracters`)
-      } else
-
-        if (projectMoney == 0 && projectName.length == 0) {
-          alert('are you kiding me?')
-        } else if (projectMoney < 5000 && projectName.length > 2) {
-          alert(`You cant create project with ${projectMoney} of money, your project must have at least $5000,00`)
-        } else if (projectName.length <= 2 && projectMoney < 5000) {
-          alert('are you kiding me? Put the name of the project and your money')
+      fetch(`https://pokeapi.co/api/v2/pokemon/${name.toLowerCase()}`)
+      .then((res) => {
+        if (!res.ok) throw new Error('Pokémon não encontrado!')
+        return res.json()
+      })
+     
+      .then((data) => {
+        const SortNumber = Math.random() < 0.08 ? 1 : 0
+        if (SortNumber === 1) {
+          setPokeImage(data.sprites.front_shiny);
+        } else {
+          setPokeImage(data.sprites.front_default);
         }
 
+        setPokemon(data), console.log(data)})
+        
 
-
-  }
-
-  function handleDeleteProject(id: number) {
-    // 
-    setSecondModalOpen(false)
-    setProject(project.filter((p) => p.id !== id))
-  }
-
-  function openEditModal(id: number, name: string, money: number) {
-    setEditProjectId(id)
-    setEditProjectName(name)
-    setEditProjectMoney(money)
-    onOpen()
-
-  }
-
-
-  function handleUpdateProject() {
-    // se o id nao for null
-    if (editProjectId !== null) {
-      setProject(project.map((p) =>
-        p.id === editProjectId ? { ...p, name: editProjectName, money: editProjectMoney, lastTimeEdited: new Date } : p
-      ))
-      onClose()
+      .catch(() => {
+        setPokemon(null)
+        setError('Pokémon não encontrado!')
+      });
+      setName('')
+    }
     }
 
-
-
-    // errado
-    // setProject((post) => post. === id ? {...post, updatedName} : post)
-    // setProjectMoney(editProjectMoney)
-  }
-
-  return (
+  return(
     <Flex
-      zIndex='1'
-      flexDir='column'
-
-      fontFamily='monospace'
-
       h='100vh'
       w='100vw'
-      bgColor='gray.800'
-
+      bgColor='gray.900'
       color='white'
+      justify="center"
+      align="center"
+      position='absolute'
     >
       <Flex
-        h='8%'
-        w='100vw'
-        bgColor='blackAlpha.700'
-      >
-      </Flex>
-
-      <Flex
+       flex="1"
+       height='100%'
+       w='100%'
+       padding='10px'
+       gap='20px'
+       flexDir='column'
+      > 
+        <Text> Enter the Pokémon's id or name: </Text>
+        <Flex> 
+          <Input placeholder='oi' borderRadius='10px 0 0 10px'
+          bgColor='black'
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          focusBorderColor='white'
+          _focus={{ outline: 'none', boxShadow: 'none' }}
+          />
+          <Button bgColor='gray.300' borderRadius='0 10px 10px 0' onClick={() => search()}>Pesquisar</Button>
+        </Flex>
+        <Flex
         flexDir='column'
-        h='92%'
-        w='100%'
-      >
-        <Flex
-          padding='10px'
-          justify='end'
-          align='center'
-          bgColor='blackAlpha.600'
-          w='100vw'
-          h='8%'
+        fontSize='18px'
+        gap='10px'
+        align='center'  
+        width='100%'
+        height='100%'
         >
-          <Button
-            onClick={openCreatingMenu}
-
-            color='white'
-            transition='.3s'
-            _hover={{
-              bgColor: 'blackAlpha.900',
-              color: '#ccc',
-            }}
-            bgColor='blackAlpha.700'
-          >
-            <Text
-            > Create</Text>
-          </Button>
-
-        </Flex>
-
-        {creatingMenu && (
-          <Flex
-            zIndex='3'
-            position='absolute'
-            top='0'
-            left='0'
-            h='100vh'
-            w='100vw'
-            bgColor='blackAlpha.700'
-            align='center'
-            justify='center'
-          >
-
-            <Flex
-              align='center'
-              flexDir='column'
-
-              bgColor='#000'
-              width='550px'
-              h='600px'
-
-              padding='10px'
-              gap='30px'
-            >
-              <Flex
-                align='center'
-                flexDir='column'
-                gap='10px'
-              >
-                <Text
-                  fontSize='25px'
-                > Type the project name</Text>
-                <Input value={projectName} onChange={(e) => setProjectName(e.target.value)}
-                  width='400px'
-                />
-              </Flex>
-
-              <Flex
-                align='center'
-                flexDir='column'
-                gap='10px'
-              >
-                <Text
-                  fontSize='25px'
-                > Type the project money</Text>
-                <Input value={projectMoney} onChange={(e) => setProjectMoney(Number(e.target.value))} type='number'
-                  width='400px'
-                />
-              </Flex>
-
-              <Button onClick={handleCreateProject}>Create</Button>
-            </Flex>
-
-            <Text fontSize='25px' color="white">
-
-            </Text>
-          </Flex>
-        )}
-
-        <Flex
-          gap='20px'
-          flexDir='column'
-          padding='10px'
-        >
-          {project.map((post, index) => (
-            <Flex
-
-              width='100%'
-              align='center'
-              padding='10px'
-              bgColor='blackAlpha.400'
-              key={index}
+          {pokemon ? (
+            <Flex 
+            width="100%" 
+            maxWidth="700px" 
+            minWidth="300px" 
+            position='relative'
+            flexDir='column'
             >
 
-              <Flex
-                w='100%'
-                h='100%'
-                gap='10%'
+              <Text 
+              align='center' 
+              zIndex='2' 
+              position='absolute'  
+              top='60%'
+              left='30%'
+              transform='translateX(-50%)'  
+              fontSize='25px' 
+              color='black'
               >
+                {pokemon.name}
+              </Text>   
+              {/* @ts-ignore*/}
+              <Img src={pokeImage} width='150px' height='150px' position='absolute' zIndex='2' top='30%' left='26%' transform='translateX(-50%)'  />
+              
+              <Img src={Pokedex.src} zIndex='1'  width="100%" maxWidth="700px" justifyContent='center' />
 
-                <Text
-                  width='500px'
-                  fontSize='18px'
-                >
-                  {post.name}
-                </Text>
+              <Flex position='absolute' left='60%' top='30%' zIndex='2' width='100%' height='100%'> 
+                  <Text> N.0{pokemon.id}</Text>
 
-                <Text
-                  width='500px'
-                  fontSize='18px'
-                >
-                  R$ {post.money},00
-                </Text>
+                  <Flex
+                  width='25%'
+                  height='100%'
+                  justify='end'
+                  > 
+                    <Text>{pokemon.name}</Text>
 
-                <Popover closeOnBlur={false} placement='left'>
-                  {() => (
-                    <>
-                      <PopoverTrigger>
-                        <Button
-                          colorScheme='blue'
-                        >Info</Button>
-                      </PopoverTrigger>
-                      <Portal>
-                        <PopoverContent
-                          color='white'
-                          border='none'
-                        >
-                          <PopoverCloseButton />
-                          <PopoverBody
+                  </Flex>
+              </Flex>
 
-                            borderRadius='5px'
-                            bgColor='blue.900'
-                          >
-
-                            <Text>
-                              {post.name ? `Project name: ${post.name}` : 'Name doesnt exist'}
-                            </Text>
-
-                            <Text>
-                              {post.money ? `Project money: ${post.money}` : 'Money doesnt exist'}
-                            </Text>
-
-                            <Text>
-                              {post.createdAt ? `Created in: ${new Date(post.createdAt).toLocaleTimeString([], { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}` : 'date doesnt exist'}
-                            </Text>
-
-                            <Text>
-                              {post.lastTimeEdited ? `Last time edited in: ${new Date(post.lastTimeEdited).toLocaleTimeString([], { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}` : 'date doesnt exist'}
-                            </Text>
-                          </PopoverBody>
-                        </PopoverContent>
-                      </Portal>
-                    </>
-                  )}
-                </Popover>
+              
+               
 
               </Flex>
-              <Flex
-                gap='20px'
-              >
 
-
-
-                <Button colorScheme='gray' onClick={() => openEditModal(post.id, post.name, post.money)}>Edit</Button>
-
-                <Modal
-                  initialFocusRef={initialRef}
-                  finalFocusRef={finalRef}
-                  isOpen={isOpen}
-                  onClose={onClose}
-                >
-                  <ModalOverlay />
-                  <ModalContent
-                    color='white'
-                    bgColor='black'
-                  >
-                    <ModalHeader>Edit:</ModalHeader>
-                    <ModalCloseButton />
-                    <ModalBody
-
-                      bgColor='black'
-                      pb={6}
-                      padding='20px'
-                      gap='20px'
-                    >
-
-                      <Flex
-                        padding='5px'
-                        gap='5px'
-                        flexDir='column'
-                      >
-                        <Text
-                          fontSize='15px'
-                        > Edit Project Name</Text>
-                        <Input ref={initialRef} placeholder='Edited Name' value={editProjectName} onChange={(e) => setEditProjectName(e.target.value)} />
-                      </Flex>
-
-                      <Flex
-                        padding='10px'
-                        gap='5px'
-                        flexDir='column'
-                      >
-                        <Text
-                          fontSize='15px'
-                        > Edit Project Money</Text>
-                        <Input ref={initialRef} placeholder='Edited Money' value={editProjectMoney} onChange={(e) => setEditProjectMoney(Number(e.target.value))} type='number' />
-                      </Flex>
-                    </ModalBody>
-                    <ModalFooter>
-
-                      <Button colorScheme='red' mr={3} onClick={handleUpdateProject}>
-                        Save
-                      </Button>
-
-                      <Button onClick={onClose}>Cancel</Button>
-                    </ModalFooter>
-                  </ModalContent>
-                </Modal>
-
-
-
-                <Button colorScheme='red' onClick={() => setSecondModalOpen(true)}>Delete Project</Button>
-                <Modal closeOnOverlayClick={false} isOpen={secondModalOpen} onClose={() => setSecondModalOpen(false)}>
-                  <ModalOverlay />
-                  <ModalContent
-                    color='white'
-                    bgColor='#000'
-                  >
-                    <ModalHeader>Delete your Post</ModalHeader>
-
-                    <ModalFooter
-                      gap='10px'
-                    >
-                      <Button colorScheme='red' onClick={() => handleDeleteProject(post.id)}> Delete </Button>
-                      <Button onClick={() => setSecondModalOpen(false)}>Cancel</Button>
-                    </ModalFooter>
-                  </ModalContent>
-                </Modal>
-
-              </Flex>
-            </Flex>
-          ))}
+          ) : (<Flex color='red'> {error} </Flex>)}
         </Flex>
-
+      
       </Flex>
     </Flex>
-  );
+  )
 }
