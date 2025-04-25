@@ -1,3 +1,33 @@
+# Pokédex - React Project
+
+This is an interactive Pokédex project built with React (and other technologies you used, like TypeScript, Chakra UI, etc.). The app fetches data from the PokéAPI and displays detailed information about Pokémon, such as name, type, image, abilities, and more.
+
+
+# Features:
+
+Pokémon listing with pagination
+
+Search by name
+
+Filter by type
+
+Display detailed info of selected Pokémon
+
+Responsive and user-friendly interface
+
+
+# Technologies used:
+
+React
+
+Typescript / Chakra ui
+
+PokéAPI
+
+
+
+
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
